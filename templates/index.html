@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Uni+Sans:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<style>
+body {
+    margin: 0;
+    font-family: 'Uni Sans', sans-serif;
+    background-color: #1f2a2e;
+    color: #a3bcb9;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 20%;
+    background-color: #152524;
+    padding: 1rem;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+}
+
+.sidebar:hover {
+    width: 22%;
+}
+
+.sidebar .server-name {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar .server-name img {
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    margin-right: 0.5rem;
+    transition: transform 0.3s;
+}
+
+.sidebar .server-name img:hover {
+    transform: scale(1.1);
+}
+
+.sidebar .channel {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #4f545c;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.sidebar .channel:hover {
+    background: #1e3835;
+}
+
+.content {
+    width: 80%;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+.content-header {
+    font-size: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #4f545c;
+    margin-bottom: 0.5rem;
+}
+
+.content:hover {
+    width: 78%;
+}
+
+.messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    border-bottom: 1px solid #4f545c;
+    padding-bottom: 1rem;
+}
+
+.message-bar {
+    display: flex;
+    padding: 1rem;
+    border-top: 1px solid #4f545c;
+}
+
+.message-bar input {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 5px;
+    border: none;
+    margin-right: 1rem;
+    background-color: #293736;
+    color: #a3bcb9;
+}
+
+.message-bar button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    background-color: #66b38a;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.message-bar button:hover {
+    background-color: #539a73;
+}
+
+@keyframes spinOnce {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.spinOnce {
+    animation: spinOnce 1s linear;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="sidebar">
+<div class="server-name">
+<img alt="server icon" src="/static/server icon.png"/>
+            Verdant's Server
+        </div>
+<div class="channel"># general</div>
+<div class="channel"># random</div>
+<!-- Add more channels as needed -->
+<div class="channel"># music</div><div class="channel"># movies</div><div class="channel"># tech</div></div>
+<div class="content">
+<div class="content-header">
+            # Select a channel
+        </div>
+<div class="messages">
+<!-- Add messages here -->
+</div>
+<div class="message-bar">
+<input placeholder="Type a message..." type="text"/>
+<button>Send</button>
+</div>
+</div>
+</div>
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+    socket.on('connect', () => {
+        document.querySelector('.message-bar button').onclick = () => {
+            const message = document.querySelector('.message-bar input').value;
+            const channel = document.querySelector('.sidebar .channel.active').textContent.trim();
+            socket.emit('send_message', {'message': message, 'channel': channel});
+            document.querySelector('.message-bar input').value = '';  // Clear the input box
+        };
+
+        document.querySelectorAll('.sidebar .channel').forEach(channel => {
+            channel.onclick = () => {
+                document.querySelectorAll('.sidebar .channel').forEach(c => c.classList.remove('active'));
+                channel.classList.add('active');
+                const channelName = channel.textContent.trim();
+                document.querySelector('.content-header').textContent = channelName;
+                socket.emit('join_channel', {'channel': channelName});
+            };
+        });
+    });
+
+    socket.on('receive_message', data => {
+        const currentChannel = document.querySelector('.content-header').textContent.trim();
+        if (currentChannel === data.channel) {
+            const div = document.createElement('div');
+            div.textContent = data.message;
+            document.querySelector('.messages').append(div);
+        }
+    });
+
+    socket.on('load_messages', data => {
+        const messagesDiv = document.querySelector('.messages');
+        messagesDiv.innerHTML = '';
+        data.messages.forEach(message => {
+            const div = document.createElement('div');
+            div.textContent = message;
+            messagesDiv.append(div);
+        });
+    });
+});
+</script>
+<script>
+document.querySelector('.message-bar input').addEventListener('keydown', function(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        document.querySelector('.message-bar button').click();
+    }
+});
+</script></body>
+</html>
+
+<script>
+const logo = document.querySelector('.server-name img');
+logo.addEventListener('click', function() {
+    if (!this.classList.contains('spinOnce')) {
+        this.classList.add('spinOnce');
+        setTimeout(() => {
+            this.classList.remove('spinOnce');
+        }, 1000);
+    }
+});
+</script>
