@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const message = document.querySelector('.message-bar input').value;
             const channel = document.querySelector('.sidebar .channel.active').textContent.trim();
             socket.emit('send_message', {'message': message, 'channel': channel});
-            document.querySelector('.message-bar input').value = '';  // Clear the input box
+            document.querySelector('.message-bar input').value = ''; 
         };
 
         document.querySelectorAll('.sidebar .channel').forEach(channel => {
