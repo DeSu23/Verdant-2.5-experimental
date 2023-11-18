@@ -15,7 +15,7 @@ def index():
 @socketio.on('send_message')
 def handle_send_message(data):
     if not data['message'].strip():
-        return  # Do not process empty or whitespace-only messages
+        return 
     channel = data['channel']
     message = "Stranger: " + data['message']
     
